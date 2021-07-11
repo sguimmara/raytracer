@@ -1,11 +1,13 @@
-use simplelog::*;
-use clap::{App, Arg, SubCommand, crate_version, crate_authors, crate_name, crate_description, ArgMatches};
 use crate::app::RunOpts;
+use clap::{
+    crate_authors, crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand,
+};
+use simplelog::*;
 
 mod app;
-mod scene;
 mod math;
 mod rendering;
+mod scene;
 
 fn main() {
     configure_logger();
@@ -28,19 +30,25 @@ fn main() {
         //     .short("v")
         //     .multiple(true)
         //     .help("Sets the level of verbosity"))
-        .subcommand(SubCommand::with_name("run")
-            .about("runs the raytracer")
-            .arg(Arg::with_name("output")
-                .short("o")
-                .help("the output image file to write"))
-            .arg(Arg::with_name("verbose")
-                .short("v")
-                .help("print detailed messages")))
+        .subcommand(
+            SubCommand::with_name("run")
+                .about("runs the raytracer")
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .help("the output image file to write"),
+                )
+                .arg(
+                    Arg::with_name("verbose")
+                        .short("v")
+                        .help("print detailed messages"),
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
         ("run", Some(subcommand)) => prepare_run(subcommand),
-        _ => println!("{}", matches.usage())
+        _ => println!("{}", matches.usage()),
     }
     // let mut fb = FrameBuffer::new(108, 25);
     // log::info!("created {}", fb);

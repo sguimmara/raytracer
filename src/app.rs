@@ -1,7 +1,7 @@
-use log::*;
-use crate::rendering::backends::{FileBackend, Backend};
-use crate::rendering::{FrameBuffer};
+use crate::rendering::backends::{Backend, FileBackend};
+use crate::rendering::FrameBuffer;
 use crate::scene::Scene;
+use log::*;
 
 #[derive(Debug)]
 pub struct RunOpts {
@@ -11,7 +11,10 @@ pub struct RunOpts {
 
 impl RunOpts {
     pub fn new(output_file: &str, verbose: bool) -> Self {
-        RunOpts { output_file: String::from(output_file), verbose }
+        RunOpts {
+            output_file: String::from(output_file),
+            verbose,
+        }
     }
 }
 

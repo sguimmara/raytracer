@@ -1,10 +1,10 @@
+use crate::rendering::backends::Backend;
+use crate::rendering::framebuffer::RenderTarget;
 use image::codecs::png::PngEncoder;
 use image::ColorType;
-use std::fs;
-use crate::rendering::framebuffer::{RenderTarget};
-use crate::rendering::backends::Backend;
-use std::fmt::{Display, Formatter};
 use nameof::name_of_type;
+use std::fmt::{Display, Formatter};
+use std::fs;
 
 /// A [Backend] that writes the [FrameBuffer] into an image file.
 pub struct FileBackend<'a> {

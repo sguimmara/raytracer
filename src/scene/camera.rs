@@ -1,6 +1,5 @@
 use crate::math::{Ray, Vec3};
-use crate::rendering::RenderTarget;
-use crate::rendering::Rgb;
+use crate::rendering::{RenderTarget, Color};
 use crate::scene::{Scene, Transform};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
@@ -8,7 +7,7 @@ use std::fmt::{Display, Formatter};
 #[derive(Debug)]
 pub struct Camera {
     transform: Transform,
-    clear_color: Rgb,
+    clear_color: Color,
     focal_length: f32,
     width: f32,
     height: f32,
@@ -26,7 +25,7 @@ impl Display for Camera {
 }
 
 impl Camera {
-    pub fn new(clear_color: Rgb) -> Self {
+    pub fn new(clear_color: Color) -> Self {
         Camera {
             transform: Transform::default(),
             clear_color,
@@ -62,7 +61,7 @@ impl Camera {
 
         for entity in &scene.entities {
             match entity.raytrace(&ray) {
-                Some(hit) =>         target.set(pixel.0, pixel.1, Rgb::red()),
+                Some(hit) => target.set(pixel.0, pixel.1, hit.material().diffuse_color()),
                 _ => {}
             }
         }

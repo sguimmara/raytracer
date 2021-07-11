@@ -1,6 +1,6 @@
-use crate::rendering::rgb::Rgb;
-use std::fmt::{Display, Formatter};
 use nameof::name_of_type;
+use std::fmt::{Display, Formatter};
+use crate::rendering::{colors, Color};
 
 /// A [RenderTarget] is a matrix of pixels that were rendered.
 pub trait RenderTarget {
@@ -14,13 +14,13 @@ pub trait RenderTarget {
     fn height(&self) -> u32;
 
     /// Clears the [RenderTarget] with the specified [Rgb] value.
-    fn clear(&mut self, value: Rgb);
+    fn clear(&mut self, value: Color);
 
     /// Sets the pixel (x, y) with the specified [Rgb] value.
-    fn set(&mut self, x: u32, y: u32, value: Rgb);
+    fn set(&mut self, x: u32, y: u32, value: Color);
 
     /// Gets the pixel (x, y).
-    fn get(&self, x: u32, y: u32) -> Rgb;
+    fn get(&self, x: u32, y: u32) -> Color;
 }
 
 #[derive(Debug)]
@@ -30,13 +30,19 @@ pub struct FrameBuffer {
     pixels: Vec<u8>,
 }
 
-const R_OFFSET : usize = 0;
-const G_OFFSET : usize = 1;
-const B_OFFSET : usize = 2;
+const R_OFFSET: usize = 0;
+const G_OFFSET: usize = 1;
+const B_OFFSET: usize = 2;
 
 impl Display for FrameBuffer {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} ({}*{} RGB)", name_of_type!(FrameBuffer), self.width, self.height)
+        write!(
+            f,
+            "{} ({}*{} RGB)",
+            name_of_type!(FrameBuffer),
+            self.width,
+            self.height
+        )
     }
 }
 
@@ -57,7 +63,7 @@ impl RenderTarget for FrameBuffer {
     }
 
     /// Clears the [ColorMatrix] with the specified [Rgb] value.
-    fn clear(&mut self, value: Rgb) {
+    fn clear(&mut self, value: Color) {
         for x in 0..self.width {
             for y in 0..self.height {
                 self.set(x, y, value);
@@ -66,7 +72,7 @@ impl RenderTarget for FrameBuffer {
     }
 
     /// Sets the [Rgb] value of the specified pixel.
-    fn set(&mut self, x: u32, y: u32, value: Rgb) {
+    fn set(&mut self, x: u32, y: u32, value: Color) {
         let offset = self.offset(x, y);
 
         self.pixels[offset + R_OFFSET] = value.r;
@@ -75,14 +81,14 @@ impl RenderTarget for FrameBuffer {
     }
 
     /// Gets the [Rgb] value of the specified pixel.
-    fn get(&self, x: u32, y: u32) -> Rgb {
+    fn get(&self, x: u32, y: u32) -> Color {
         let offset = self.offset(x, y);
 
         let r = self.pixels[offset + R_OFFSET];
         let g = self.pixels[offset + G_OFFSET];
         let b = self.pixels[offset + B_OFFSET];
 
-        Rgb::new(r, g, b)
+        Color::new(r, g, b)
     }
 }
 
@@ -94,9 +100,9 @@ impl FrameBuffer {
 
         let byte_count = width * height * 3;
         let mut pixels = Vec::with_capacity((byte_count) as usize);
-        let r = Rgb::default().r;
-        let g = Rgb::default().g;
-        let b = Rgb::default().b;
+        let r = Color::default().r;
+        let g = Color::default().g;
+        let b = Color::default().b;
         for _ in 0..(width * height) {
             pixels.push(r);
             pixels.push(g);
@@ -110,8 +116,8 @@ impl FrameBuffer {
         }
     }
 
-    fn offset(&self, x: u32, y : u32) -> usize {
-        ((3*x) + y * self.width * 3) as usize
+    fn offset(&self, x: u32, y: u32) -> usize {
+        ((3 * x) + y * self.width * 3) as usize
     }
 }
 
@@ -131,12 +137,11 @@ mod test {
     fn clear() {
         let mut buffer = FrameBuffer::new(5, 9);
 
-        let red = Rgb::red();
-        buffer.clear(red);
+        buffer.clear(colors::RED);
 
         for x in 0..buffer.width() {
             for y in 0..buffer.height() {
-                assert_eq!(red, buffer.get(x, y));
+                assert_eq!(colors::RED, buffer.get(x, y));
             }
         }
     }

@@ -1,6 +1,6 @@
 pub mod file;
 use crate::rendering::framebuffer::RenderTarget;
-pub use file::FileBackend as FileBackend;
+pub use file::FileBackend;
 
 /// Provides a method to render a [FrameBuffer] into an output
 pub trait Backend {
