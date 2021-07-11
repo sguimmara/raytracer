@@ -1,11 +1,13 @@
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
-use crate::rendering::{colors, Color, Pixel};
+use crate::rendering::{colors, Color, Pixel, PixelSize};
 
 /// A [RenderTarget] is a matrix of pixels that were rendered.
 pub trait RenderTarget {
     /// Gets the underlying bytes.
     fn as_bytes(&self) -> &[u8];
+
+    fn size(&self) -> PixelSize;
 
     /// Gets the width of the [RenderTarget], in pixels.
     fn width(&self) -> u32;
@@ -25,8 +27,7 @@ pub trait RenderTarget {
 
 #[derive(Debug)]
 pub struct FrameBuffer {
-    width: u32,
-    height: u32,
+    size: PixelSize,
     pixels: Vec<u8>,
 }
 
@@ -40,8 +41,8 @@ impl Display for FrameBuffer {
             f,
             "{} ({}*{} RGB)",
             name_of_type!(FrameBuffer),
-            self.width,
-            self.height
+            self.width(),
+            self.height()
         )
     }
 }
@@ -52,17 +53,21 @@ impl RenderTarget for FrameBuffer {
         &self.pixels
     }
 
+    fn size(&self) -> PixelSize {
+        self.size
+    }
+
     fn width(&self) -> u32 {
-        self.width
+        self.size.width
     }
 
     fn height(&self) -> u32 {
-        self.height
+        self.size.height
     }
 
     fn clear(&mut self, value: Color) {
-        for x in 0..self.width {
-            for y in 0..self.height {
+        for x in 0..self.size.width {
+            for y in 0..self.size.height {
                 self.set(Pixel::new(x, y), value);
             }
         }
@@ -105,14 +110,13 @@ impl FrameBuffer {
         }
 
         FrameBuffer {
-            width,
-            height,
+            size: PixelSize::new(width, height),
             pixels,
         }
     }
 
     fn offset(&self, p: Pixel) -> usize {
-        ((3 * p.x) + p.y * self.width * 3) as usize
+        ((3 * p.x) + p.y * self.size.width * 3) as usize
     }
 }
 

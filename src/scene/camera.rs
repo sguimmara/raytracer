@@ -1,5 +1,5 @@
 use crate::math::{Ray, Vec3};
-use crate::rendering::{RenderTarget, Color, colors, Pixel};
+use crate::rendering::{RenderTarget, Color, colors, Pixel, HdrColor, SubPixel, PixelSize};
 use crate::scene::{Scene, Transform};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
@@ -70,23 +70,50 @@ impl Camera {
         }
     }
 
+    fn get_samples(u: f32, v: f32, sample_count: u32) {
+
+    }
+
     /// Render a single pixel
     fn render_pixel(&self, pixel: Pixel, scene: &Scene, target: &mut dyn RenderTarget) {
-        let uv = self.uv(pixel, target.width(), target.height());
+        let samples = 1f32;
+        let mut hdr = HdrColor::default();
+
+        // The pixel is divided into multiple samples
+        let subpix0 = SubPixel::from(pixel);
+
+        self.sample(subpix0, scene, target.size(), &mut hdr);
+
+        let color = Color::from(hdr);
+
+        target.set(pixel, color);
+    }
+
+    fn sample(&self, subpix: SubPixel, scene: &Scene, size: PixelSize, hdr: &mut HdrColor) {
+        let uv = self.uv(subpix, size);
         let ray = self.pixel_to_ray(uv);
 
-        for entity in &scene.entities {
-            match entity.raytrace(&ray) {
-                Some(hit) => target.set(pixel, hit.material().diffuse_color()),
-                _ => {}
-            }
+        match self.raytrace(scene, &ray) {
+            Some(color) => *hdr += color,
+            _ => {}
         }
     }
 
-    fn uv(&self, pixel: Pixel, pixel_width: u32, pixel_height: u32) -> (f32, f32) {
+    fn raytrace(&self, scene: &Scene, ray: &Ray) -> Option<Color> {
+        for entity in &scene.entities {
+            match entity.raytrace(&ray) {
+                Some(hit) => return Some(hit.material().diffuse_color()),
+                _ => continue
+            }
+        }
+
+        None
+    }
+
+    fn uv(&self, pixel: SubPixel, size: PixelSize) -> (f32, f32) {
         (
-            pixel.x as f32 / (pixel_width - 1) as f32,
-            pixel.y as f32 / (pixel_height - 1) as f32,
+            pixel.x / (size.width - 1) as f32,
+            pixel.y / (size.height - 1) as f32,
         )
     }
 
