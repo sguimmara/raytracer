@@ -1,5 +1,5 @@
 use crate::rendering::backends::{Backend, FileBackend, WindowBackend};
-use crate::rendering::FrameBuffer;
+use crate::rendering::{FrameBuffer, RenderOpts, Sampling};
 use crate::scene::Scene;
 use log::*;
 
@@ -33,7 +33,10 @@ pub fn run(opts: RunOpts) {
     let mut fb = FrameBuffer::new(width, height);
     info!("created {}", fb);
 
-    scene.render(&mut fb);
+    let opts = RenderOpts::new()
+        .with_samples(Sampling::Samples4);
+
+    scene.render(&mut fb, &opts);
 
     // let backend = FileBackend::new(opts.output_file.as_str());
     let backend = WindowBackend::new();

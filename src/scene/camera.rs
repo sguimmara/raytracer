@@ -1,5 +1,5 @@
 use crate::math::{Ray, Vec3};
-use crate::rendering::{RenderTarget, Color, colors, Pixel, HdrColor, SubPixel, PixelSize};
+use crate::rendering::{RenderTarget, Color, colors, Pixel, HdrColor, SubPixel, PixelSize, RenderOpts, Sampling};
 use crate::scene::{Scene, Transform};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
@@ -55,59 +55,79 @@ impl Camera {
         self.aspect
     }
 
-    pub fn render(&self, scene: &Scene, target: &mut dyn RenderTarget) {
+    pub fn render(&self, scene: &Scene, target: &mut dyn RenderTarget, opts: &RenderOpts) {
         target.clear(self.clear_color);
 
         for y in 0..target.height() {
-            self.render_scanline(y, &scene, target);
+            self.render_scanline(y, &scene, target, opts);
         }
     }
 
     /// Renders a single scanline
-    fn render_scanline(&self, row: u32, scene: &Scene, target: &mut dyn RenderTarget) {
+    fn render_scanline(&self, row: u32, scene: &Scene, target: &mut dyn RenderTarget, opts: &RenderOpts) {
         for col in 0..target.width() {
-            self.render_pixel(Pixel::new(col, row), scene, target);
+            self.render_pixel(Pixel::new(col, row), scene, target, opts);
         }
     }
 
-    fn get_samples(u: f32, v: f32, sample_count: u32) {
-
-    }
-
     /// Render a single pixel
-    fn render_pixel(&self, pixel: Pixel, scene: &Scene, target: &mut dyn RenderTarget) {
-        let samples = 1f32;
+    fn render_pixel(&self, pixel: Pixel, scene: &Scene, target: &mut dyn RenderTarget, opts: &RenderOpts) {
         let mut hdr = HdrColor::default();
 
-        // The pixel is divided into multiple samples
-        let subpix0 = SubPixel::from(pixel);
-
-        self.sample(subpix0, scene, target.size(), &mut hdr);
+        match opts.samples {
+            Sampling::Disabled => self.render_pixel_1_sample(pixel, scene, target.size(), &mut hdr),
+            Sampling::Samples4 => self.render_pixel_4_samples(pixel, scene, target.size(), &mut hdr),
+            Sampling::Samples16 => unimplemented!()
+        }
 
         let color = Color::from(hdr);
 
         target.set(pixel, color);
     }
 
+    /// Render a single pixel
+    fn render_pixel_1_sample(&self, pixel: Pixel, scene: &Scene, size: PixelSize, hdr: &mut HdrColor) {
+        let center = SubPixel::from(pixel);
+
+        self.sample(center, scene, size, hdr);
+    }
+
+    /// Render a single pixel with 4 samples (2*2)
+    fn render_pixel_4_samples(&self, pixel: Pixel, scene: &Scene, size: PixelSize, hdr: &mut HdrColor) {
+        // The pixel is divided into multiple samples in the following pattern
+        // +--------+
+        // | ul  ur |
+        // | ll  lr |
+        // +--------+
+        let center = SubPixel::from(pixel);
+        const SUB_OFFSET: f32 = 0.25;
+        let ur = center.with_offset(SUB_OFFSET, SUB_OFFSET);
+        let ll = center.with_offset(-SUB_OFFSET, -SUB_OFFSET);
+        let lr = center.with_offset(SUB_OFFSET, -SUB_OFFSET);
+        let ul = center.with_offset(-SUB_OFFSET, SUB_OFFSET);
+
+        self.sample(ur, scene, size, hdr);
+        self.sample(ul, scene, size, hdr);
+        self.sample(lr, scene, size, hdr);
+        self.sample(ll, scene, size, hdr);
+    }
+
     fn sample(&self, subpix: SubPixel, scene: &Scene, size: PixelSize, hdr: &mut HdrColor) {
         let uv = self.uv(subpix, size);
         let ray = self.pixel_to_ray(uv);
 
-        match self.raytrace(scene, &ray) {
-            Some(color) => *hdr += color,
-            _ => {}
-        }
+        *hdr += self.raytrace(scene, &ray);
     }
 
-    fn raytrace(&self, scene: &Scene, ray: &Ray) -> Option<Color> {
+    fn raytrace(&self, scene: &Scene, ray: &Ray) -> Color {
         for entity in &scene.entities {
             match entity.raytrace(&ray) {
-                Some(hit) => return Some(hit.material().diffuse_color()),
+                Some(hit) => return hit.material().diffuse_color(),
                 _ => continue
             }
         }
 
-        None
+        self.clear_color
     }
 
     fn uv(&self, pixel: SubPixel, size: PixelSize) -> (f32, f32) {

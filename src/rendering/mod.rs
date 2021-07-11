@@ -12,6 +12,34 @@ pub mod backends;
 pub mod framebuffer;
 pub mod material;
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct RenderOpts {
+    pub samples: Sampling,
+}
+
+impl RenderOpts {
+    pub fn new() -> Self {
+        RenderOpts { samples: Sampling::Disabled }
+    }
+
+    pub fn with_samples(self, samples: Sampling) -> Self {
+        let mut s = self;
+        s.samples = samples;
+        s
+    }
+}
+
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Sampling {
+    // disabled: only 1 sample per pixel is computed
+    Disabled,
+    // 2x2 samples per pixel
+    Samples4,
+    // 4x4 samples per pixel
+    Samples16,
+}
+
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct PixelSize {
     pub width : u32,
@@ -45,6 +73,10 @@ pub struct SubPixel {
 impl SubPixel {
     pub fn new(x: f32, y: f32) -> Self {
         Self { x, y }
+    }
+
+    pub fn with_offset(self, x: f32, y: f32) -> Self {
+        Self::new(self.x + x, self.y + y)
     }
 }
 
