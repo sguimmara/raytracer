@@ -17,6 +17,7 @@ impl<'a> Display for FileBackend<'a> {
     }
 }
 
+#[allow(dead_code)]
 impl<'a> FileBackend<'a> {
     pub fn new(filename: &'a str) -> Self {
         FileBackend { filename }

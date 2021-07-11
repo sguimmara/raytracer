@@ -55,6 +55,7 @@ impl Backend for WindowBackend {
     }
 }
 
+#[allow(dead_code)]
 impl WindowBackend {
     pub fn new() -> Self {
         Self {}

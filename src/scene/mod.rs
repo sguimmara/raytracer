@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::math::Vec3;
-use crate::rendering::{colors, materials, Camera, RenderTarget, RenderOpts};
+use crate::rendering::{colors, Camera, RenderTarget, RenderOpts, Material};
 
 pub mod camera;
 pub mod entity;
@@ -17,15 +17,15 @@ pub use transform::Transform;
 use crate::scene::primitives::Sphere;
 
 #[derive(Debug)]
-pub struct Scene<'a> {
-    entities: Vec<Entity<'a>>,
+pub struct Scene {
+    entities: Vec<Entity>,
     camera: Camera,
 }
 
-impl<'a> Scene<'a> {
+impl Scene {
     pub fn new() -> Self {
         let sphere = Box::new(Sphere::new(1.0));
-        let material = &materials::SOLID_RED;
+        let material = Material::from_diffuse(colors::GREEN);
         let entity = Entity::new(Transform::default(), material, sphere);
         let entities = vec![entity];
         let mut camera = Camera::new().with_clear_color(colors::BLUE);
@@ -34,8 +34,8 @@ impl<'a> Scene<'a> {
         Scene { entities, camera }
     }
 
-    pub fn render(&self, target: &mut dyn RenderTarget, opts: &RenderOpts) {
-        self.camera.render(self, target, opts);
+    pub fn render(&self, target: &mut dyn RenderTarget, opts: &RenderOpts, progress_func: &dyn Fn(f32)) {
+        self.camera.render(self, target, opts, progress_func);
     }
 
     pub fn camera(&self) -> &Camera {

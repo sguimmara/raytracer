@@ -1,5 +1,7 @@
 use crate::math::{Ray, Vec3};
-use crate::rendering::{RenderTarget, Color, colors, Pixel, HdrColor, SubPixel, PixelSize, RenderOpts, Sampling};
+use crate::rendering::{
+    colors, Color, HdrColor, Pixel, PixelSize, RenderOpts, RenderTarget, Sampling, SubPixel,
+};
 use crate::scene::{Scene, Transform};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
@@ -55,29 +57,55 @@ impl Camera {
         self.aspect
     }
 
-    pub fn render(&self, scene: &Scene, target: &mut dyn RenderTarget, opts: &RenderOpts) {
+    pub fn render(
+        &self,
+        scene: &Scene,
+        target: &mut dyn RenderTarget,
+        opts: &RenderOpts,
+        progress_func: &dyn Fn(f32),
+    ) {
         target.clear(self.clear_color);
+
+        log::info!("rendering...");
+        let mut progress: f32 = 0f32;
 
         for y in 0..target.height() {
             self.render_scanline(y, &scene, target, opts);
+
+            progress += 1f32 / (target.height() as f32);
+            progress_func(progress);
         }
     }
 
     /// Renders a single scanline
-    fn render_scanline(&self, row: u32, scene: &Scene, target: &mut dyn RenderTarget, opts: &RenderOpts) {
+    fn render_scanline(
+        &self,
+        row: u32,
+        scene: &Scene,
+        target: &mut dyn RenderTarget,
+        opts: &RenderOpts,
+    ) {
         for col in 0..target.width() {
             self.render_pixel(Pixel::new(col, row), scene, target, opts);
         }
     }
 
     /// Render a single pixel
-    fn render_pixel(&self, pixel: Pixel, scene: &Scene, target: &mut dyn RenderTarget, opts: &RenderOpts) {
+    fn render_pixel(
+        &self,
+        pixel: Pixel,
+        scene: &Scene,
+        target: &mut dyn RenderTarget,
+        opts: &RenderOpts,
+    ) {
         let mut hdr = HdrColor::default();
 
         match opts.samples {
             Sampling::Disabled => self.render_pixel_1_sample(pixel, scene, target.size(), &mut hdr),
-            Sampling::Samples4 => self.render_pixel_4_samples(pixel, scene, target.size(), &mut hdr),
-            Sampling::Samples16 => unimplemented!()
+            Sampling::Samples4 => {
+                self.render_pixel_4_samples(pixel, scene, target.size(), &mut hdr)
+            }
+            Sampling::Samples16 => unimplemented!(),
         }
 
         let color = Color::from(hdr);
@@ -86,14 +114,26 @@ impl Camera {
     }
 
     /// Render a single pixel
-    fn render_pixel_1_sample(&self, pixel: Pixel, scene: &Scene, size: PixelSize, hdr: &mut HdrColor) {
+    fn render_pixel_1_sample(
+        &self,
+        pixel: Pixel,
+        scene: &Scene,
+        size: PixelSize,
+        hdr: &mut HdrColor,
+    ) {
         let center = SubPixel::from(pixel);
 
         self.sample(center, scene, size, hdr);
     }
 
     /// Render a single pixel with 4 samples (2*2)
-    fn render_pixel_4_samples(&self, pixel: Pixel, scene: &Scene, size: PixelSize, hdr: &mut HdrColor) {
+    fn render_pixel_4_samples(
+        &self,
+        pixel: Pixel,
+        scene: &Scene,
+        size: PixelSize,
+        hdr: &mut HdrColor,
+    ) {
         // The pixel is divided into multiple samples in the following pattern
         // +--------+
         // | ul  ur |
@@ -123,7 +163,7 @@ impl Camera {
         for entity in &scene.entities {
             match entity.raytrace(&ray) {
                 Some(hit) => return hit.material().diffuse_color(),
-                _ => continue
+                _ => continue,
             }
         }
 

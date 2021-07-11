@@ -3,14 +3,14 @@ use crate::rendering::Material;
 use crate::scene::{Hittable, Transform, Hit};
 
 #[derive(Debug)]
-pub struct Entity<'a> {
+pub struct Entity {
     transform: Transform,
-    material: &'a Material,
+    material: Material,
     renderer: Box<dyn Hittable>,
 }
 
-impl<'a> Entity<'a> {
-    pub fn new(transform: Transform, material: &'a Material, renderer: Box<dyn Hittable>) -> Self {
+impl Entity {
+    pub fn new(transform: Transform, material: Material, renderer: Box<dyn Hittable>) -> Self {
         Self {
             transform,
             material,

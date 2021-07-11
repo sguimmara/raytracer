@@ -1,4 +1,4 @@
-use crate::rendering::backends::{Backend, FileBackend, WindowBackend};
+use crate::rendering::backends::{Backend, WindowBackend};
 use crate::rendering::{FrameBuffer, RenderOpts, Sampling};
 use crate::scene::Scene;
 use log::*;
@@ -18,6 +18,13 @@ impl RunOpts {
     }
 }
 
+fn progress_func(progress: f32) {
+    let percent = (progress * 100f32) as u32;
+    if percent % 10 == 0 {
+        info!("progress: {}%", percent);
+    }
+}
+
 /// runs the raytracer
 pub fn run(opts: RunOpts) {
     info!("running raytracer");
@@ -33,10 +40,9 @@ pub fn run(opts: RunOpts) {
     let mut fb = FrameBuffer::new(width, height);
     info!("created {}", fb);
 
-    let opts = RenderOpts::new()
-        .with_samples(Sampling::Samples4);
+    let opts = RenderOpts::new().with_samples(Sampling::Samples4);
 
-    scene.render(&mut fb, &opts);
+    scene.render(&mut fb, &opts, &progress_func);
 
     // let backend = FileBackend::new(opts.output_file.as_str());
     let backend = WindowBackend::new();

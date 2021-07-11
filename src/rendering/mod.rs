@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use nameof::name_of_type;
 
 pub use framebuffer::{FrameBuffer, RenderTarget};
-pub use material::{materials, Material};
+pub use material::{Material};
 
 pub use crate::scene::camera::Camera;
 use std::ops::{Add, AddAssign};
@@ -30,6 +30,7 @@ impl RenderOpts {
 }
 
 
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Sampling {
     // disabled: only 1 sample per pixel is computed
@@ -134,6 +135,7 @@ pub struct Color {
     pub b: u8,
 }
 
+#[allow(dead_code)]
 pub mod colors {
     use super::Color;
 
