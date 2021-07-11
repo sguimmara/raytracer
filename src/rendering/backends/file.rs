@@ -24,7 +24,7 @@ impl<'a> FileBackend<'a> {
 }
 
 impl<'a> Backend for FileBackend<'a> {
-    fn write(&self, buf: &dyn RenderTarget) {
+    fn present(&self, buf: &dyn RenderTarget) {
         let stream = fs::File::create(self.filename).expect("could not create file");
 
         let encoder = PngEncoder::new(stream);

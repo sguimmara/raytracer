@@ -28,7 +28,7 @@ impl<'a> Scene<'a> {
         let material = &materials::SOLID_RED;
         let entity = Entity::new(Transform::default(), material, sphere);
         let entities = vec![entity];
-        let mut camera = Camera::new(colors::GRAY);
+        let mut camera = Camera::new().with_clear_color(colors::BLACK);
         camera.transform().set_position(Vec3::new(0.0, 0.0, -2.0));
 
         Scene { entities, camera }
@@ -36,5 +36,9 @@ impl<'a> Scene<'a> {
 
     pub fn render(&self, target: &mut dyn RenderTarget) {
         self.camera.render(self, target)
+    }
+
+    pub fn camera(&self) -> &Camera {
+        &self.camera
     }
 }

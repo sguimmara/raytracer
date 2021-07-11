@@ -52,17 +52,14 @@ impl RenderTarget for FrameBuffer {
         &self.pixels
     }
 
-    /// Returns the width of the [ColorMatrix], in pixels
     fn width(&self) -> u32 {
         self.width
     }
 
-    /// Returns the height of the [ColorMatrix], in pixels
     fn height(&self) -> u32 {
         self.height
     }
 
-    /// Clears the [ColorMatrix] with the specified [Rgb] value.
     fn clear(&mut self, value: Color) {
         for x in 0..self.width {
             for y in 0..self.height {
@@ -71,7 +68,6 @@ impl RenderTarget for FrameBuffer {
         }
     }
 
-    /// Sets the [Rgb] value of the specified pixel.
     fn set(&mut self, x: u32, y: u32, value: Color) {
         let offset = self.offset(x, y);
 
@@ -80,7 +76,6 @@ impl RenderTarget for FrameBuffer {
         self.pixels[offset + B_OFFSET] = value.b;
     }
 
-    /// Gets the [Rgb] value of the specified pixel.
     fn get(&self, x: u32, y: u32) -> Color {
         let offset = self.offset(x, y);
 

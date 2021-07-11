@@ -1,4 +1,4 @@
-use crate::rendering::backends::{Backend, FileBackend};
+use crate::rendering::backends::{Backend, FileBackend, WindowBackend};
 use crate::rendering::FrameBuffer;
 use crate::scene::Scene;
 use log::*;
@@ -23,19 +23,23 @@ pub fn run(opts: RunOpts) {
     info!("running raytracer");
     info!("output file is {}", opts.output_file);
 
-    let mut fb = FrameBuffer::new(256, 256);
-    info!("created {}", fb);
-
     info!("start rendering...");
 
     let scene = Scene::new();
 
+    let ratio = scene.camera().aspect();
+    let height = 512u32;
+    let width = (ratio * height as f32) as u32;
+    let mut fb = FrameBuffer::new(width, height);
+    info!("created {}", fb);
+
     scene.render(&mut fb);
 
-    let backend = FileBackend::new(opts.output_file.as_str());
+    // let backend = FileBackend::new(opts.output_file.as_str());
+    let backend = WindowBackend::new();
 
     info!("saving render to {}", backend);
-    backend.write(&fb);
+    backend.present(&fb);
 
     info!("finished.");
 }

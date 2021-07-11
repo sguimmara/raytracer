@@ -1,5 +1,5 @@
 use crate::math::{Ray, Vec3};
-use crate::rendering::{RenderTarget, Color};
+use crate::rendering::{RenderTarget, Color, colors};
 use crate::scene::{Scene, Transform};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
@@ -9,6 +9,7 @@ pub struct Camera {
     transform: Transform,
     clear_color: Color,
     focal_length: f32,
+    aspect: f32,
     width: f32,
     height: f32,
 }
@@ -25,18 +26,33 @@ impl Display for Camera {
 }
 
 impl Camera {
-    pub fn new(clear_color: Color) -> Self {
+    pub fn new() -> Self {
+        let aspect = 16.0 / 9.0;
+        let height = 2.0;
+        let width = aspect * height;
+
         Camera {
             transform: Transform::default(),
-            clear_color,
+            clear_color: colors::BLACK,
             focal_length: 1f32,
-            width: 2f32,
-            height: 2f32,
+            aspect,
+            width,
+            height,
         }
+    }
+
+    pub fn with_clear_color(self, color: Color) -> Self {
+        let mut new = self;
+        new.clear_color = color;
+        new
     }
 
     pub fn transform(&mut self) -> &mut Transform {
         &mut self.transform
+    }
+
+    pub fn aspect(&self) -> f32 {
+        self.aspect
     }
 
     pub fn render(&self, scene: &Scene, target: &mut dyn RenderTarget) {
