@@ -34,4 +34,8 @@ impl Rgb {
     pub fn green() -> Self {
         Rgb { r: 0, g: 255, b: 0 }
     }
+
+    pub fn gray() -> Self {
+        Rgb { r: 50, g: 50, b: 50 }
+    }
 }

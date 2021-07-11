@@ -1,7 +1,7 @@
 use image::codecs::png::PngEncoder;
 use image::ColorType;
 use std::fs;
-use crate::rendering::framebuffer::{ColorMatrix};
+use crate::rendering::framebuffer::{RenderTarget};
 use crate::rendering::backends::Backend;
 use std::fmt::{Display, Formatter};
 use nameof::name_of_type;
@@ -24,7 +24,7 @@ impl<'a> FileBackend<'a> {
 }
 
 impl<'a> Backend for FileBackend<'a> {
-    fn write(&self, buf: &dyn ColorMatrix) {
+    fn write(&self, buf: &dyn RenderTarget) {
         let stream = fs::File::create(self.filename).expect("could not create file");
 
         let encoder = PngEncoder::new(stream);

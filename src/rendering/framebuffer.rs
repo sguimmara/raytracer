@@ -2,8 +2,8 @@ use crate::rendering::rgb::Rgb;
 use std::fmt::{Display, Formatter};
 use nameof::name_of_type;
 
-/// Types that act as a pixel matrix
-pub trait ColorMatrix {
+/// A [RenderTarget] is a matrix of pixels that were rendered.
+pub trait RenderTarget {
     /// Gets the underlying bytes.
     fn as_bytes(&self) -> &[u8];
 
@@ -40,7 +40,7 @@ impl Display for FrameBuffer {
     }
 }
 
-impl ColorMatrix for FrameBuffer {
+impl RenderTarget for FrameBuffer {
     /// Returns a view of the underlying bytes.
     fn as_bytes(&self) -> &[u8] {
         &self.pixels
