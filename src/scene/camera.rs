@@ -1,7 +1,5 @@
 use crate::math::{Ray, Vec3};
-use crate::rendering::{
-    colors, Color, HdrColor, Pixel, PixelSize, RenderOpts, RenderTarget, Sampling, SubPixel,
-};
+use crate::rendering::{Color, Sample, Pixel, PixelSize, RenderOpts, RenderTarget, Sampling, SubPixel, BLACK};
 use crate::scene::{Scene, Transform};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
@@ -35,7 +33,7 @@ impl Camera {
 
         Camera {
             transform: Transform::default(),
-            clear_color: colors::BLACK,
+            clear_color: BLACK,
             focal_length: 1f32,
             aspect,
             width,
@@ -43,16 +41,19 @@ impl Camera {
         }
     }
 
+    /// Sets the clear color
     pub fn with_clear_color(self, color: Color) -> Self {
         let mut new = self;
         new.clear_color = color;
         new
     }
 
+    /// Gets the [Transform] associated with this [Camera]
     pub fn transform(&mut self) -> &mut Transform {
         &mut self.transform
     }
 
+    /// Gets the aspect ratio
     pub fn aspect(&self) -> f32 {
         self.aspect
     }
@@ -69,10 +70,16 @@ impl Camera {
         log::info!("rendering...");
         let mut progress: f32 = 0f32;
 
-        for y in 0..target.height() {
-            self.render_scanline(y, &scene, target, opts);
+        let render_func = match opts.samples {
+                Sampling::Disabled => Self::render_pixel_1_sample,
+                Sampling::Samples4 => Self::render_pixel_4_samples,
+                Sampling::Samples16 => Self::render_pixel_16_samples,
+            };
 
-            progress += 1f32 / (target.height() as f32);
+        for y in 0..target.size().height {
+            self.render_scanline(y, &scene, target, render_func);
+
+            progress += 1f32 / (target.size().height as f32);
             progress_func(progress);
         }
     }
@@ -83,10 +90,10 @@ impl Camera {
         row: u32,
         scene: &Scene,
         target: &mut dyn RenderTarget,
-        opts: &RenderOpts,
+        render_func: fn(&Camera, Pixel, &Scene, PixelSize, &mut Sample)
     ) {
-        for col in 0..target.width() {
-            self.render_pixel(Pixel::new(col, row), scene, target, opts);
+        for col in 0..target.size().width {
+            self.render_pixel(Pixel::new(col, row), scene, target, render_func);
         }
     }
 
@@ -96,17 +103,11 @@ impl Camera {
         pixel: Pixel,
         scene: &Scene,
         target: &mut dyn RenderTarget,
-        opts: &RenderOpts,
+        render_func: fn(&Camera, Pixel, &Scene, PixelSize, &mut Sample)
     ) {
-        let mut hdr = HdrColor::default();
+        let mut hdr = Sample::default();
 
-        match opts.samples {
-            Sampling::Disabled => self.render_pixel_1_sample(pixel, scene, target.size(), &mut hdr),
-            Sampling::Samples4 => {
-                self.render_pixel_4_samples(pixel, scene, target.size(), &mut hdr)
-            }
-            Sampling::Samples16 => unimplemented!(),
-        }
+        render_func(&self, pixel, scene, target.size(), &mut hdr);
 
         let color = Color::from(hdr);
 
@@ -119,7 +120,7 @@ impl Camera {
         pixel: Pixel,
         scene: &Scene,
         size: PixelSize,
-        hdr: &mut HdrColor,
+        hdr: &mut Sample,
     ) {
         let center = SubPixel::from(pixel);
 
@@ -132,7 +133,7 @@ impl Camera {
         pixel: Pixel,
         scene: &Scene,
         size: PixelSize,
-        hdr: &mut HdrColor,
+        hdr: &mut Sample,
     ) {
         // The pixel is divided into multiple samples in the following pattern
         // +--------+
@@ -152,7 +153,65 @@ impl Camera {
         self.sample(ll, scene, size, hdr);
     }
 
-    fn sample(&self, subpix: SubPixel, scene: &Scene, size: PixelSize, hdr: &mut HdrColor) {
+    /// Render a single pixel with 16 samples (4*4)
+    fn render_pixel_16_samples(
+        &self,
+        pixel: Pixel,
+        scene: &Scene,
+        size: PixelSize,
+        hdr: &mut Sample,
+    ) {
+        // The pixel is divided into multiple samples in the following pattern
+        // +-----------------+
+        // | r00 r10 r20 r30 |
+        // | r01 r11 r21 r31 |
+        // | r02 r12 r22 r32 |
+        // | r03 r13 r23 r33 |
+        // +-----------------+
+        let center = SubPixel::from(pixel);
+        const SUB_OFFSET: f32 = 0.125;
+        let r00 = center.with_offset(-SUB_OFFSET*2.0, SUB_OFFSET*2.0);
+        let r10 = center.with_offset(-SUB_OFFSET*1.0, SUB_OFFSET*2.0);
+        let r20 = center.with_offset(SUB_OFFSET*1.0, SUB_OFFSET*2.0);
+        let r30 = center.with_offset(SUB_OFFSET*2.0, SUB_OFFSET*2.0);
+
+        let r01 = center.with_offset(-SUB_OFFSET*2.0, SUB_OFFSET*1.0);
+        let r11 = center.with_offset(-SUB_OFFSET*1.0, SUB_OFFSET*1.0);
+        let r21 = center.with_offset(SUB_OFFSET*1.0, SUB_OFFSET*1.0);
+        let r31 = center.with_offset(SUB_OFFSET*2.0, SUB_OFFSET*1.0);
+
+        let r02 = center.with_offset(-SUB_OFFSET*2.0, -SUB_OFFSET*1.0);
+        let r12 = center.with_offset(-SUB_OFFSET*1.0, -SUB_OFFSET*1.0);
+        let r22 = center.with_offset(SUB_OFFSET*1.0, -SUB_OFFSET*1.0);
+        let r32 = center.with_offset(SUB_OFFSET*2.0, -SUB_OFFSET*1.0);
+
+        let r03 = center.with_offset(-SUB_OFFSET*2.0, -SUB_OFFSET*2.0);
+        let r13 = center.with_offset(-SUB_OFFSET*1.0, -SUB_OFFSET*2.0);
+        let r23 = center.with_offset(SUB_OFFSET*1.0, -SUB_OFFSET*2.0);
+        let r33 = center.with_offset(SUB_OFFSET*2.0, -SUB_OFFSET*2.0);
+
+        self.sample(r00, scene, size, hdr);
+        self.sample(r10, scene, size, hdr);
+        self.sample(r20, scene, size, hdr);
+        self.sample(r30, scene, size, hdr);
+
+        self.sample(r01, scene, size, hdr);
+        self.sample(r11, scene, size, hdr);
+        self.sample(r21, scene, size, hdr);
+        self.sample(r31, scene, size, hdr);
+
+        self.sample(r02, scene, size, hdr);
+        self.sample(r12, scene, size, hdr);
+        self.sample(r22, scene, size, hdr);
+        self.sample(r32, scene, size, hdr);
+
+        self.sample(r03, scene, size, hdr);
+        self.sample(r13, scene, size, hdr);
+        self.sample(r23, scene, size, hdr);
+        self.sample(r33, scene, size, hdr);
+    }
+
+    fn sample(&self, subpix: SubPixel, scene: &Scene, size: PixelSize, hdr: &mut Sample) {
         let uv = self.uv(subpix, size);
         let ray = self.pixel_to_ray(uv);
 

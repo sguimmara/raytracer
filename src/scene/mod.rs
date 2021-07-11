@@ -1,11 +1,10 @@
 use std::fmt::Debug;
 
 use crate::math::Vec3;
-use crate::rendering::{colors, Camera, RenderTarget, RenderOpts, Material};
+use crate::rendering::{Camera, RenderTarget, RenderOpts, Material, GREEN, BLUE};
 
 pub mod camera;
 pub mod entity;
-pub mod hit;
 pub mod hittable;
 pub mod primitives;
 pub mod transform;
@@ -25,10 +24,10 @@ pub struct Scene {
 impl Scene {
     pub fn new() -> Self {
         let sphere = Box::new(Sphere::new(1.0));
-        let material = Material::from_diffuse(colors::GREEN);
+        let material = Material::from_diffuse(GREEN);
         let entity = Entity::new(Transform::default(), material, sphere);
         let entities = vec![entity];
-        let mut camera = Camera::new().with_clear_color(colors::BLUE);
+        let mut camera = Camera::new().with_clear_color(BLUE);
         camera.transform().set_position(Vec3::new(0.0, 0.0, -2.0));
 
         Scene { entities, camera }

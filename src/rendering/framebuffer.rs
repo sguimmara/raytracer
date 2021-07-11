@@ -1,27 +1,22 @@
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
-use crate::rendering::{colors, Color, Pixel, PixelSize};
+use crate::rendering::{Color, Pixel, PixelSize};
 
-/// A [RenderTarget] is a matrix of pixels that were rendered.
+/// Types that can be rendered into.
 pub trait RenderTarget {
     /// Gets the underlying bytes.
-    fn as_bytes(&self) -> &[u8];
+    fn bytes(&self) -> &[u8];
 
+    /// Gets the size of this [RenderTarget]
     fn size(&self) -> PixelSize;
 
-    /// Gets the width of the [RenderTarget], in pixels.
-    fn width(&self) -> u32;
-
-    /// Gets the height of the [RenderTarget], in pixels.
-    fn height(&self) -> u32;
-
-    /// Clears the [RenderTarget] with the specified [Rgb] value.
+    /// Clears the [RenderTarget] with the specified [Color] value.
     fn clear(&mut self, value: Color);
 
-    /// Sets the pixel (x, y) with the specified [Rgb] value.
+    /// Sets the [Pixel] with the specified [Color] value.
     fn set(&mut self, pixel: Pixel, value: Color);
 
-    /// Gets the pixel (x, y).
+    /// Gets the color of the [Pixel].
     fn get(&self, pixel: Pixel) -> Color;
 }
 
@@ -41,28 +36,20 @@ impl Display for FrameBuffer {
             f,
             "{} ({}*{} RGB)",
             name_of_type!(FrameBuffer),
-            self.width(),
-            self.height()
+            self.size.width,
+            self.size.height
         )
     }
 }
 
 impl RenderTarget for FrameBuffer {
     /// Returns a view of the underlying bytes.
-    fn as_bytes(&self) -> &[u8] {
+    fn bytes(&self) -> &[u8] {
         &self.pixels
     }
 
     fn size(&self) -> PixelSize {
         self.size
-    }
-
-    fn width(&self) -> u32 {
-        self.size.width
-    }
-
-    fn height(&self) -> u32 {
-        self.size.height
     }
 
     fn clear(&mut self, value: Color) {
@@ -123,12 +110,13 @@ impl FrameBuffer {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::rendering::RED;
 
     #[test]
     fn new() {
         let buffer = FrameBuffer::new(10, 15);
-        assert_eq!(10, buffer.width());
-        assert_eq!(15, buffer.height());
+        assert_eq!(10, buffer.size().width);
+        assert_eq!(15, buffer.size().height);
         assert_eq!(10 * 15 * 3, buffer.pixels.len());
     }
 
@@ -136,11 +124,11 @@ mod test {
     fn clear() {
         let mut buffer = FrameBuffer::new(5, 9);
 
-        buffer.clear(colors::RED);
+        buffer.clear(RED);
 
-        for x in 0..buffer.width() {
-            for y in 0..buffer.height() {
-                assert_eq!(colors::RED, buffer.get(Pixel::new(x, y)));
+        for x in 0..buffer.size().width {
+            for y in 0..buffer.size().height {
+                assert_eq!(RED, buffer.get(Pixel::new(x, y)));
             }
         }
     }

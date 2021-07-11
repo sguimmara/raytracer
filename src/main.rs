@@ -1,3 +1,5 @@
+//! A simple Raytracer
+
 use crate::app::RunOpts;
 use clap::{
     crate_authors, crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand,
@@ -16,20 +18,6 @@ fn main() {
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
-        // .arg(Arg::with_name("config")
-        //     .short("c")
-        //     .long("config")
-        //     .value_name("FILE")
-        //     .help("Sets a custom config file")
-        //     .takes_value(true))
-        // .arg(Arg::with_name("INPUT")
-        //     .help("Sets the input file to use")
-        //     .required(true)
-        //     .index(1))
-        // .arg(Arg::with_name("v")
-        //     .short("v")
-        //     .multiple(true)
-        //     .help("Sets the level of verbosity"))
         .subcommand(
             SubCommand::with_name("run")
                 .about("runs the raytracer")
@@ -50,24 +38,9 @@ fn main() {
         ("run", Some(subcommand)) => prepare_run(subcommand),
         _ => println!("{}", matches.usage()),
     }
-    // let mut fb = FrameBuffer::new(108, 25);
-    // log::info!("created {}", fb);
-    //
-    // let camera = Camera::new(Rgb::red());
-    // log::info!("created {}", camera);
-    //
-    // log::info!("start rendering...");
-    //
-    // camera.render(&mut fb);
-    //
-    // let backend = FileBackend::new("/home/sguimmara/Downloads/foo.png");
-    //
-    // log::info!("saving render to {}", backend);
-    // backend.write(&fb);
-    //
-    // log::info!("finished.");
 }
 
+#[doc(hidden)]
 fn prepare_run(p0: &ArgMatches) {
     let output_file = p0.value_of("output").unwrap_or("run.png");
     let verbose = p0.value_of("verbose");
@@ -77,6 +50,7 @@ fn prepare_run(p0: &ArgMatches) {
     app::run(run_opts);
 }
 
+#[doc(hidden)]
 fn configure_logger() {
     CombinedLogger::init(vec![TermLogger::new(
         LevelFilter::Trace,
