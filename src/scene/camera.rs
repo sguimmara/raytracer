@@ -1,5 +1,5 @@
 use crate::math::{Ray, Vec3};
-use crate::rendering::{RenderTarget, Color, colors};
+use crate::rendering::{RenderTarget, Color, colors, Pixel};
 use crate::scene::{Scene, Transform};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
@@ -66,27 +66,27 @@ impl Camera {
     /// Renders a single scanline
     fn render_scanline(&self, row: u32, scene: &Scene, target: &mut dyn RenderTarget) {
         for col in 0..target.width() {
-            self.render_pixel((col, row), scene, target);
+            self.render_pixel(Pixel::new(col, row), scene, target);
         }
     }
 
     /// Render a single pixel
-    fn render_pixel(&self, pixel: (u32, u32), scene: &Scene, target: &mut dyn RenderTarget) {
-        let uv = self.uv(pixel.0, pixel.1, target.width(), target.height());
+    fn render_pixel(&self, pixel: Pixel, scene: &Scene, target: &mut dyn RenderTarget) {
+        let uv = self.uv(pixel, target.width(), target.height());
         let ray = self.pixel_to_ray(uv);
 
         for entity in &scene.entities {
             match entity.raytrace(&ray) {
-                Some(hit) => target.set(pixel.0, pixel.1, hit.material().diffuse_color()),
+                Some(hit) => target.set(pixel, hit.material().diffuse_color()),
                 _ => {}
             }
         }
     }
 
-    fn uv(&self, x: u32, y: u32, pixel_width: u32, pixel_height: u32) -> (f32, f32) {
+    fn uv(&self, pixel: Pixel, pixel_width: u32, pixel_height: u32) -> (f32, f32) {
         (
-            x as f32 / (pixel_width - 1) as f32,
-            y as f32 / (pixel_height - 1) as f32,
+            pixel.x as f32 / (pixel_width - 1) as f32,
+            pixel.y as f32 / (pixel_height - 1) as f32,
         )
     }
 

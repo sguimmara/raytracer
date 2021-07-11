@@ -1,6 +1,6 @@
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
-use crate::rendering::{colors, Color};
+use crate::rendering::{colors, Color, Pixel};
 
 /// A [RenderTarget] is a matrix of pixels that were rendered.
 pub trait RenderTarget {
@@ -17,10 +17,10 @@ pub trait RenderTarget {
     fn clear(&mut self, value: Color);
 
     /// Sets the pixel (x, y) with the specified [Rgb] value.
-    fn set(&mut self, x: u32, y: u32, value: Color);
+    fn set(&mut self, pixel: Pixel, value: Color);
 
     /// Gets the pixel (x, y).
-    fn get(&self, x: u32, y: u32) -> Color;
+    fn get(&self, pixel: Pixel) -> Color;
 }
 
 #[derive(Debug)]
@@ -63,21 +63,21 @@ impl RenderTarget for FrameBuffer {
     fn clear(&mut self, value: Color) {
         for x in 0..self.width {
             for y in 0..self.height {
-                self.set(x, y, value);
+                self.set(Pixel::new(x, y), value);
             }
         }
     }
 
-    fn set(&mut self, x: u32, y: u32, value: Color) {
-        let offset = self.offset(x, y);
+    fn set(&mut self, pixel: Pixel, value: Color) {
+        let offset = self.offset(pixel);
 
         self.pixels[offset + R_OFFSET] = value.r;
         self.pixels[offset + G_OFFSET] = value.g;
         self.pixels[offset + B_OFFSET] = value.b;
     }
 
-    fn get(&self, x: u32, y: u32) -> Color {
-        let offset = self.offset(x, y);
+    fn get(&self, pixel: Pixel) -> Color {
+        let offset = self.offset(pixel);
 
         let r = self.pixels[offset + R_OFFSET];
         let g = self.pixels[offset + G_OFFSET];
@@ -111,8 +111,8 @@ impl FrameBuffer {
         }
     }
 
-    fn offset(&self, x: u32, y: u32) -> usize {
-        ((3 * x) + y * self.width * 3) as usize
+    fn offset(&self, p: Pixel) -> usize {
+        ((3 * p.x) + p.y * self.width * 3) as usize
     }
 }
 
@@ -125,7 +125,7 @@ mod test {
         let buffer = FrameBuffer::new(10, 15);
         assert_eq!(10, buffer.width());
         assert_eq!(15, buffer.height());
-        assert_eq!(10 * 15, buffer.pixels.len());
+        assert_eq!(10 * 15 * 3, buffer.pixels.len());
     }
 
     #[test]
@@ -136,7 +136,7 @@ mod test {
 
         for x in 0..buffer.width() {
             for y in 0..buffer.height() {
-                assert_eq!(colors::RED, buffer.get(x, y));
+                assert_eq!(colors::RED, buffer.get(Pixel::new(x, y)));
             }
         }
     }

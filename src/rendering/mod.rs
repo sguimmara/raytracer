@@ -11,6 +11,18 @@ pub mod backends;
 pub mod framebuffer;
 pub mod material;
 
+#[derive(Debug, Copy, Clone, Default)]
+pub struct Pixel {
+    pub x: u32,
+    pub y: u32
+}
+
+impl Pixel {
+    pub fn new(x: u32, y: u32) -> Self {
+        Self { x, y }
+    }
+}
+
 /// A simple RGB color
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct Color {
