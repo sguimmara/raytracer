@@ -1,6 +1,6 @@
 use crate::math::{Ray, Vec3};
 use crate::rendering::{Color, Sample, Pixel, PixelSize, RenderOpts, RenderTarget, Sampling, SubPixel, BLACK};
-use crate::scene::{Scene, Transform};
+use crate::scene::{Scene, Transform, Hittable};
 use nameof::name_of_type;
 use std::fmt::{Display, Formatter};
 
@@ -219,14 +219,10 @@ impl Camera {
     }
 
     fn raytrace(&self, scene: &Scene, ray: &Ray) -> Color {
-        for entity in &scene.entities {
-            match entity.raytrace(&ray) {
-                Some(hit) => return hit.material().diffuse_color(),
-                _ => continue,
-            }
+        match &scene.hit(ray) {
+            Some(hit) => hit.material().diffuse_color(),
+            None => self.clear_color
         }
-
-        self.clear_color
     }
 
     fn uv(&self, pixel: SubPixel, size: PixelSize) -> (f32, f32) {

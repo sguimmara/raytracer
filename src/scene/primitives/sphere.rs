@@ -1,5 +1,6 @@
 use crate::math::{Ray, Vec3};
-use crate::scene::{Transform, Hittable, Hit};
+use crate::scene::{Transform, Hit, Primitive};
+use crate::rendering::Material;
 
 #[derive(Debug)]
 pub struct Sphere {
@@ -16,8 +17,8 @@ impl Sphere {
     }
 }
 
-impl Hittable for Sphere {
-    fn test(&self, ray: &Ray, transform: &Transform) -> Option<Hit> {
+impl Primitive for Sphere {
+    fn hit(&self, ray: &Ray, transform: &Transform, material: Material) -> Option<Hit> {
         let center = transform.position();
         let oc = ray.origin() - center;
         let a = Vec3::dot(&ray.direction(), &ray.direction());
@@ -34,7 +35,8 @@ impl Hittable for Sphere {
         let hit_point = ray.at(distance);
         let hit_normal = Vec3::normalize(&(hit_point - center));
 
-        let hit = Hit::new(hit_point, hit_normal);
+        let sqr_dist = Vec3::magnitude_squared(&(hit_point - ray.origin()));
+        let hit = Hit::new(hit_point, hit_normal, sqr_dist, material);
 
         Some(hit)
     }

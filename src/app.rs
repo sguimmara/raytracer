@@ -1,4 +1,4 @@
-use crate::rendering::backends::{Backend, WindowBackend, NullBackend};
+use crate::rendering::backends::{Backend, WindowBackend};
 use crate::rendering::{FrameBuffer, RenderOpts, Sampling};
 use crate::scene::Scene;
 use log::*;

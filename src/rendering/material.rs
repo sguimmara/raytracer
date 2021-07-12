@@ -14,3 +14,11 @@ impl Material {
         self.diffuse
     }
 }
+
+impl Clone for Material {
+    fn clone(&self) -> Self {
+        Self {
+            diffuse: self.diffuse
+        }
+    }
+}

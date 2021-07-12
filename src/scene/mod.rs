@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::math::Vec3;
+use crate::math::{Vec3, Ray};
 use crate::rendering::{Camera, RenderTarget, RenderOpts, Material, GREEN, BLUE};
 
 pub mod camera;
@@ -9,7 +9,7 @@ pub mod hittable;
 pub mod primitives;
 pub mod transform;
 
-use crate::scene::entity::Entity;
+use crate::scene::entity::{Entity};
 pub use hittable::{Hittable, Hit};
 pub use primitives::{Primitive};
 pub use transform::Transform;
@@ -39,5 +39,26 @@ impl Scene {
 
     pub fn camera(&self) -> &Camera {
         &self.camera
+    }
+}
+
+impl Hittable for Scene {
+    fn hit(&self, ray: &Ray) -> Option<Hit> {
+        let mut closest : Option<Hit> = None;
+        let mut distance = 9999999999999999999.0;
+
+        for entity in &self.entities {
+            match entity.hit(ray) {
+                Some(hit) => {
+                    if closest.is_none() || hit.sqr_distance() < distance {
+                        distance = hit.sqr_distance();
+                        closest = Some(hit);
+                    }
+                },
+                None => {}
+            }
+        }
+
+        closest
     }
 }
