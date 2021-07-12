@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::math::{Vec3, Ray};
-use crate::rendering::{Camera, RenderTarget, RenderOpts, Material, GREEN, BLUE};
+use crate::rendering::{Camera, RenderTarget, RenderOpts, Material, GREEN, BLUE, GRAY, DARK_GREEN, RED, WHITE, DARK_GRAY};
 
 pub mod camera;
 pub mod entity;
@@ -23,12 +23,21 @@ pub struct Scene {
 
 impl Scene {
     pub fn new() -> Self {
-        let sphere = Box::new(Sphere::new(1.0));
-        let material = Material::from_diffuse(GREEN);
-        let entity = Entity::new(Transform::default(), material, sphere);
-        let entities = vec![entity];
-        let mut camera = Camera::new().with_clear_color(BLUE);
-        camera.transform().set_position(Vec3::new(0.0, 0.0, -2.0));
+        let small_sphere = Sphere::new(0.5);
+        let s0 = Box::new(Sphere::new(1.0));
+        let s1 = Box::new(small_sphere.clone());
+        let s2 = Box::new(small_sphere.clone());
+        let s3 = Box::new(small_sphere.clone());
+        let ground = Box::new(Sphere::new(100.0));
+        let entities = vec![
+            Entity::new(Transform::default().with_position(Vec3::new(0.0, 1.0, 0.0)), Material::from_diffuse(WHITE), s0),
+            Entity::new(Transform::default().with_position(Vec3::new(0.0, 1.0, 1.0)), Material::from_diffuse(BLUE), s1),
+            Entity::new(Transform::default().with_position(Vec3::new(0.0, 2.0, 0.0)), Material::from_diffuse(GREEN), s2),
+            Entity::new(Transform::default().with_position(Vec3::new(1.0, 1.0, 0.0)), Material::from_diffuse(RED), s3),
+            Entity::new(Transform::default().with_position(Vec3::new(0.0, -100.0, 0.0)), Material::from_diffuse(GRAY), ground),
+        ];
+        let mut camera = Camera::new().with_clear_color(DARK_GRAY);
+        camera.transform().set_position(Vec3::new(0.0, 1.0, 4.0));
 
         Scene { entities, camera }
     }

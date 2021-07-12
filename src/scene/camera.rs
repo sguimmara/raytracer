@@ -28,7 +28,7 @@ impl Display for Camera {
 impl Camera {
     pub fn new() -> Self {
         let aspect = 16.0 / 9.0;
-        let height = 2.0;
+        let height = 1.0;
         let width = aspect * height;
 
         Camera {
@@ -226,10 +226,11 @@ impl Camera {
     }
 
     fn uv(&self, pixel: SubPixel, size: PixelSize) -> (f32, f32) {
-        (
-            pixel.x / (size.width - 1) as f32,
-            pixel.y / (size.height - 1) as f32,
-        )
+        let u = pixel.x / (size.width - 1) as f32;
+        let v = pixel.y / (size.height - 1) as f32;
+
+        // the viewport is Y-up, but the framebuffer is Y-down
+        (u, 1.0-v)
     }
 
     fn pixel_to_ray(&self, uv: (f32, f32)) -> Ray {

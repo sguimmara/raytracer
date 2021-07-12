@@ -38,12 +38,12 @@ pub fn run(opts: RunOpts) {
     let scene = Scene::new();
 
     let ratio = scene.camera().aspect();
-    let height = 1024;
+    let height = 512;
     let width = (ratio * height as f32) as u32;
     let mut fb = FrameBuffer::new(width, height);
     info!("created {}", fb);
 
-    let opts = RenderOpts::new().with_samples(Sampling::Disabled);
+    let opts = RenderOpts::new().with_samples(Sampling::Samples4);
 
     scene.render(&mut fb, &opts, &progress_func);
 

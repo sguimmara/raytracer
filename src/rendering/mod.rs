@@ -17,7 +17,9 @@ pub static WHITE: Color = Color::new(255, 255, 255);
 pub static RED: Color = Color::new(255, 0, 0);
 pub static BLUE: Color = Color::new(0, 0, 255);
 pub static GREEN: Color = Color::new(0, 255, 0);
+pub static DARK_GREEN: Color = Color::new(0, 150, 0);
 pub static GRAY: Color = Color::new(100, 100, 100);
+pub static DARK_GRAY: Color = Color::new(50, 50, 50);
 
 /// Contains parameters for the raytracing pass.
 #[derive(Debug, Copy, Clone, PartialEq)]
